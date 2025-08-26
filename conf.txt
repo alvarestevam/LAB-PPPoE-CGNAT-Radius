@@ -1,0 +1,565 @@
+==============================
+LAB PPPoE - Configurações
+Arquivo: conf.txt
+==============================
+
+# ----------------------------
+# Cisco - BNG (Broadband Network Gateway)
+# ----------------------------
+!
+hostname BNG
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+!
+aaa new-model
+!
+!
+aaa authentication ppp default group radius local
+aaa authorization network default group radius
+!
+!
+!
+!
+!
+aaa session-id common
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+!
+!
+!
+!
+!
+!
+!
+!
+bba-group pppoe PRIVADO
+ virtual-template 1
+!
+bba-group pppoe PUBLICO
+ virtual-template 2
+!
+!
+interface Loopback0
+ ip address 10.10.10.1 255.255.255.255
+!
+interface FastEthernet0/0
+ ip address 192.168.20.1 255.255.255.252
+ duplex half
+ speed auto
+!
+interface FastEthernet0/1
+ ip address 172.16.0.1 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface FastEthernet1/0
+ ip address 192.168.10.2 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface FastEthernet1/1
+ no ip address
+ duplex auto
+ speed auto
+ pppoe enable group PRIVADO
+!
+interface FastEthernet1/1.100
+ encapsulation dot1Q 100
+ pppoe enable group PUBLICO
+!
+interface FastEthernet2/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet2/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Virtual-Template1
+ ip unnumbered Loopback0
+ ip policy route-map DIRECIONAR_PRIVADO
+ peer default ip address pool PRIVADO1
+ ppp authentication chap callin
+!
+interface Virtual-Template2
+ ip unnumbered Loopback0
+ peer default ip address pool PUBLICO1
+ ppp authentication chap callin
+!
+ip local pool PRIVADO1 10.10.10.100 10.10.10.200 recycle delay 10
+ip local pool PUBLICO1 45.100.100.1 45.100.100.50
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip route 0.0.0.0 0.0.0.0 192.168.10.1
+!
+ip access-list extended SRC_PRIVADOS
+ permit ip 10.10.10.0 0.0.0.255 any
+!
+no cdp log mismatch duplex
+!
+route-map DIRECIONAR_PRIVADO permit 10
+ match ip address SRC_PRIVADOS
+ set ip next-hop 192.168.20.2
+!
+snmp-server community public RO
+snmp-server community private RW
+!
+!
+!
+radius server radius
+ address ipv4 172.16.0.2 auth-port 1812 acct-port 1813
+ key gns3
+!
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ transport input all
+!
+!
+end
+
+
+# ----------------------------
+# Cisco - BORDA-BGP
+# ----------------------------
+hostname BORDA-BGP
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface FastEthernet0/0
+ ip address 172.16.0.1 255.255.255.252
+ duplex half
+!
+interface FastEthernet1/0
+ ip address 192.168.10.1 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface FastEthernet1/1
+ ip address 192.168.30.1 255.255.255.252
+ duplex auto
+ speed auto
+!
+router bgp 100
+ bgp log-neighbor-changes
+ neighbor 172.16.0.2 remote-as 200
+ !
+ address-family ipv4
+  neighbor 172.16.0.2 activate
+ exit-address-family
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip route 0.0.0.0 0.0.0.0 192.168.10.2
+!
+no cdp log mismatch duplex
+!
+!
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+
+
+# ----------------------------
+# Cisco - CGNAT
+# ----------------------------
+hostname CGNAT
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface FastEthernet0/0
+ ip address 192.168.20.2 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly in
+ duplex half
+!
+interface FastEthernet1/0
+ ip address 192.168.30.2 255.255.255.252
+ ip nat outside
+ ip virtual-reassembly in
+ duplex half
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip nat inside source list 1 interface FastEthernet1/0 overload
+ip route 0.0.0.0 0.0.0.0 192.168.30.1
+ip route 10.10.10.0 255.255.255.0 192.168.20.1
+!
+no cdp log mismatch duplex
+!
+!
+access-list 1 permit 10.10.10.0 0.0.0.255
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+
+
+# ----------------------------
+# Cisco - OPERADORA (Upstream)
+# ----------------------------
+hostname OPERADORA
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 8.8.8.8 255.255.255.255
+!
+interface FastEthernet0/0
+ ip address 172.16.0.2 255.255.255.252
+ duplex half
+!
+router bgp 200
+ no bgp log-neighbor-changes
+ neighbor 172.16.0.1 remote-as 100
+ !
+ address-family ipv4
+  network 8.8.8.8 mask 255.255.255.255
+  neighbor 172.16.0.1 activate
+  neighbor 172.16.0.1 default-originate
+ exit-address-family
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip route 0.0.0.0 0.0.0.0 172.16.0.1
+!
+no cdp log mismatch duplex
+!
+!
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+
+
+# ----------------------------
+# Servidor AAA-1 (FreeRADIUS) - Principais arquivos
+# ----------------------------
+
+## /etc/network/interfaces
+auto eth0
+iface eth0 inet static
+    address 172.16.0.2
+    netmask 255.255.255.252
+    gateway 172.16.0.1
+#    up echo nameserver 192.168.0.1 > /etc/resolv.conf
+
+## /etc/freeradius/3.0/clients.conf (apenas entradas relevantes)
+client 172.16.0.1/32 {
+    secret     = gns3
+    shortname  = PPPoE
+    nastype    = cisco
+}
+
+## /etc/freeradius/3.0/users (apenas entradas relevantes)
+alice     Cleartext-Password := "gns3"
+          Reply-Message := "Hello, %{User-Name}"
+
+bob       Cleartext-Password := "gns3"
+          Reply-Message := "Hello, %{User-Name}"
+
+alvaro    Cleartext-Password := "cisco"
+          Reply-Message := "Hello, %{User-Name}"
+
+admin     Cleartext-Password := "admin"
+          User-Service-Type := Login-User
+
+chapuser  Cleartext-Password := "chapuser"
+          User-Service-Type := Framed-User,
+          Framed-Protocol := PPP,
+          Framed-IP-Address := 10.10.10.150
+
+user1     Cleartext-Password := "user1"
+          User-Service-Type := Framed-User,
+          Framed-Protocol := PPP
+
+publico1  Cleartext-Password := "publico1"
+          User-Service-Type := Framed-User,
+          Framed-Protocol := PPP,
+          Framed-IP-Address := 45.100.100.100
+
+# Default CHAP example (opcional, se desejar manter)
+DEFAULT   Auth-Type := CHAP, Cleartext-Password := "password1"
+          Framed-Protocol = PPP,
+          Framed-IP-Address = 255.255.255.254
